@@ -20,30 +20,30 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Installer Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Installer Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
+      - name: Verifier Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms"
+          ls "$ANDROID_HOME/build-tools"
+
       - name: Extraire le projet Android
         run: |
           ZIP_FILE=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
           if [ -z "$ZIP_FILE" ]; then
-            echo "Archive ZIP introuvable"
+            echo "ERREUR : fichier ZIP introuvable"
             exit 1
           fi
-          mkdir -p buildsrc
+          mkdir buildsrc
           unzip -q "$ZIP_FILE" -d buildsrc
           ls -la buildsrc
 
       - name: Compiler AFRICA CAISSE
-        run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
-          gradle -p buildsrc assembleDebug
+        run: gradle -p buildsrc assembleDebug
 
       - name: Publier le fichier APK
         uses: actions/upload-artifact@v4
@@ -51,3 +51,4 @@ jobs:
           name: AFRICA-CAISSE-APK
           path: buildsrc/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
